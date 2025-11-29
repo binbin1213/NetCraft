@@ -1,4 +1,4 @@
-# NetCraft 🌐
+# NetCraft
 
 > **The Next-Gen Network Architecture Designer for Homelab Enthusiasts.**
 >
@@ -92,7 +92,7 @@
 
 ---
 
-## 🏗️ Architecture (架构)
+## Architecture (架构)
 
 - **Frontend**: React 18, TypeScript, Vite, React Flow, Zustand, TailwindCSS, Ant Design.
 - **Backend**: FastAPI (Python), SQLModel, Pydantic.
@@ -115,4 +115,8 @@
 
 ## License
 
-MIT License © 2025 NetCraft Team
+**Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**
+
+© 2025 NetCraft Team. 
+
+This project is strictly for **Non-Commercial Use Only**. You may not use this software, or any derivative works, for commercial purposes without prior written consent.
