@@ -1,0 +1,50 @@
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backend (Python)
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/venv/
+backend/.env
+backend/netcraft.db
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+
+# Frontend (Node.js)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Database
+postgres_data/
+
+# Docker
+.docker/
+
+# Logs
+*.log
+
+# Documentation & Data (User Excluded)
+UI.md
+AI Agent.md
+改造.md
+netcraft-data-*.json

@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlmodel
+pydantic
+python-multipart
+dashscope
+python-dotenv
+psycopg2-binary
+passlib[argon2]
+pyjwt

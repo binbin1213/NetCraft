@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=netcraft
+      - POSTGRES_PASSWORD=netcraft_secret
+      - POSTGRES_DB=netcraft_db
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
