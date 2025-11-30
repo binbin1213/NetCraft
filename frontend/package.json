@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@types/dagre": "^0.7.53",
-    "antd": "^6.0.0",
+    "antd": "^5.22.5",
     "clsx": "^2.1.1",
     "dagre": "^0.8.5",
     "html-to-image": "^1.11.13",
@@ -27,7 +27,7 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.4.0",
     "zundo": "^2.3.0",
-    "zustand": "^5.0.8"
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -44,9 +44,6 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "npm:rolldown-vite@7.2.5"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
+    "vite": "^6.0.3"
   }
 }

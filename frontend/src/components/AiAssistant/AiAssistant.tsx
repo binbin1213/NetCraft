@@ -1,18 +1,33 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, ChevronRight, Loader2, Minus, X } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Loader2, Minus, X, Settings } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Input, Button, message, Tooltip } from 'antd';
+import { Input, Button, message, Tooltip, Modal, Form, Select } from 'antd';
 import clsx from 'clsx';
 import Draggable from 'react-draggable';
 
 import { useShallow } from 'zustand/react/shallow';
 import useStore from '../../store/useStore';
+import { API_BASE_URL } from '../../config';
 
 interface Message {
     role: 'user' | 'assistant' | 'system';
     content: string;
 }
+
+interface LLMConfig {
+    provider: string;
+    model: string;
+    api_key: string;
+    base_url?: string;
+}
+
+const DEFAULT_CONFIG: LLMConfig = {
+    provider: 'dashscope',
+    model: 'qwen-turbo',
+    api_key: '',
+    base_url: ''
+};
 
 export default function AiAssistant() {
     const { nodes, edges } = useStore(useShallow((state: any) => ({ 
@@ -20,6 +35,31 @@ export default function AiAssistant() {
         edges: state.edges 
     })));
     const [isOpen, setIsOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [config, setConfig] = useState<LLMConfig>(DEFAULT_CONFIG);
+    const [form] = Form.useForm();
+
+    useEffect(() => {
+        const savedConfig = localStorage.getItem('llm_config');
+        if (savedConfig) {
+            try {
+                const parsed = JSON.parse(savedConfig);
+                setConfig({ ...DEFAULT_CONFIG, ...parsed });
+                form.setFieldsValue({ ...DEFAULT_CONFIG, ...parsed });
+            } catch (e) {
+                console.error('Failed to parse saved config', e);
+            }
+        }
+    }, []);
+
+    const handleSaveSettings = (values: any) => {
+        const newConfig = { ...config, ...values };
+        setConfig(newConfig);
+        localStorage.setItem('llm_config', JSON.stringify(newConfig));
+        setIsSettingsOpen(false);
+        message.success('设置已保存');
+    };
+
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showTooltip, setShowTooltip] = useState(true);
@@ -92,10 +132,18 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                 history[history.length - 1].content += `\n\n[Context Info]\n${topologyContext}`;
             }
 
-            const response = await fetch('http://localhost:8000/api/chat', {
+            const response = await fetch(`${API_BASE_URL}/api/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: history })
+                body: JSON.stringify({ 
+                    messages: history,
+                    config: {
+                        provider: config.provider,
+                        model: config.model,
+                        api_key: config.api_key || undefined, // Don't send empty string
+                        base_url: config.base_url || undefined
+                    }
+                })
             });
 
             if (!response.ok) throw new Error(response.statusText);
@@ -158,8 +206,8 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
 
         } catch (error) {
             console.error(error);
-            message.error('AI Service Error: Check Backend/API Key');
-            setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Error: Unable to connect to AI service. Please ensure the backend is running and DashScope API Key is configured.' }]);
+            message.error('AI 服务错误：请检查后端或 API Key');
+            setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 错误：无法连接到 AI 服务。请确保后端正在运行且已配置 API Key。' }]);
         } finally {
             setIsLoading(false);
         }
@@ -236,6 +284,17 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">
+                                <Tooltip title="Settings">
+                                    <button 
+                                        onClick={() => {
+                                            setIsSettingsOpen(true);
+                                            form.setFieldsValue(config);
+                                        }}
+                                        className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-cyan-400 transition-colors"
+                                    >
+                                        <Settings size={18} />
+                                    </button>
+                                </Tooltip>
                                 <Tooltip title="Minimize">
                                     <button 
                                         onClick={() => setIsOpen(false)}
@@ -336,6 +395,64 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                     </div>
                 </Draggable>
             )}
+            {/* Settings Modal */}
+            <Modal
+                title="AI 配置"
+                open={isSettingsOpen}
+                onOk={form.submit}
+                onCancel={() => setIsSettingsOpen(false)}
+                okText="保存"
+                cancelText="取消"
+                width={500}
+            >
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={handleSaveSettings}
+                    initialValues={config}
+                >
+                    <Form.Item
+                        name="provider"
+                        label="服务提供商"
+                        rules={[{ required: true }]}
+                    >
+                        <Select>
+                            <Select.Option value="dashscope">DashScope (通义千问)</Select.Option>
+                            <Select.Option value="openai">OpenAI</Select.Option>
+                            <Select.Option value="deepseek">DeepSeek (深度求索)</Select.Option>
+                            <Select.Option value="moonshot">Moonshot (Kimi)</Select.Option>
+                            <Select.Option value="claude">Anthropic (Claude)</Select.Option>
+                            <Select.Option value="gemini">Google (Gemini)</Select.Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="model"
+                        label="模型名称"
+                        rules={[{ required: true }]}
+                        help="例如：qwen-turbo, gpt-4o, deepseek-chat"
+                    >
+                        <Input placeholder="qwen-turbo" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="api_key"
+                        label="API 密钥"
+                        rules={[{ required: false }]}
+                        help="留空则使用后端环境变量 (如果可用)"
+                    >
+                        <Input.Password placeholder="sk-..." />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="base_url"
+                        label="代理地址 (Base URL - 可选)"
+                        help="DeepSeek/Moonshot 等兼容接口必填 (例如 https://api.deepseek.com)"
+                    >
+                        <Input placeholder="https://api.openai.com/v1" />
+                    </Form.Item>
+                </Form>
+            </Modal>
         </>
     );
 }

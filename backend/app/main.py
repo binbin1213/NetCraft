@@ -64,17 +64,30 @@ class ChatMessage(BaseModel):
     role: str
     content: str
 
+class LLMConfig(BaseModel):
+    provider: str = "dashscope"  # dashscope, openai, deepseek, etc.
+    model: str = "qwen-turbo"
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
-    api_key: Optional[str] = None # Allow user to pass key from frontend
+    config: Optional[LLMConfig] = None
+    # Backward compatibility
+    api_key: Optional[str] = None
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
     # Convert Pydantic models to dicts
     messages = [msg.model_dump() for msg in request.messages]
     
+    # Merge backward compatible api_key into config if needed
+    config = request.config or LLMConfig()
+    if request.api_key and not config.api_key:
+        config.api_key = request.api_key
+        
     return StreamingResponse(
-        chat_stream(messages, request.api_key), 
+        chat_stream(messages, config.model_dump()), 
         media_type="text/event-stream"
     )
 

@@ -49,8 +49,12 @@ function Flow() {
   const { message } = AntdApp.useApp();
   const { t } = useTranslation();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode } = useStore(
-    useShallow(selector)
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, token, setLoginModalOpen } = useStore(
+    useShallow((state) => ({
+      ...selector(state),
+      token: state.token,
+      setLoginModalOpen: state.setLoginModalOpen,
+    }))
   );
   
   // ... rest of the component logic (no changes to logic, just using message from useApp)
@@ -164,7 +168,7 @@ function Flow() {
         data: { 
             name: `New ${type}`,
             type: type,
-            ip: generateNextIP(nodes),
+            ip: generateNextIP(useStore.getState().nodes),
             status: 'online',
             services: []
         },
@@ -248,6 +252,10 @@ function Flow() {
   const [newProjectName, setNewProjectName] = useState('');
 
   const handleSaveCloud = async () => {
+      if (!token) {
+          setLoginModalOpen(true);
+          return;
+      }
       if (currentProjectId) {
           // If already saved, update directly
           const hideLoading = message.loading(t('canvas.saving'), 0);
@@ -297,6 +305,10 @@ function Flow() {
   };
 
   const handleLoadCloud = async () => {
+      if (!token) {
+          setLoginModalOpen(true);
+          return;
+      }
       try {
           const projects = await api.getProjects();
           setProjectList(projects);

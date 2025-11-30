@@ -1,16 +1,54 @@
 version: '3.8'
 
 services:
+  # Frontend Service (React + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=/api
+    container_name: netcraft-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - netcraft-network
+
+  # Backend Service (FastAPI)
+  backend:
+    build: ./backend
+    container_name: netcraft-backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://netcraft:netcraft_secret@db:5432/netcraft_db
+      # Pass DASHSCOPE_API_KEY from host env or .env file if needed
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY} 
+    ports:
+      - "8000:8000" # Optional: Expose for debugging, but frontend communicates via internal network
+    depends_on:
+      - db
+    networks:
+      - netcraft-network
+
+  # Database Service (PostgreSQL)
   db:
     image: postgres:15-alpine
+    container_name: netcraft-db
+    restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=netcraft
       - POSTGRES_PASSWORD=netcraft_secret
       - POSTGRES_DB=netcraft_db
-    ports:
-      - "5432:5432"
+    networks:
+      - netcraft-network
+
+networks:
+  netcraft-network:
+    driver: bridge
 
 volumes:
   postgres_data:

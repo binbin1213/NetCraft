@@ -1,9 +1,10 @@
 import os
 import glob
 from http import HTTPStatus
-from typing import Generator, List, Dict, Any
+from typing import Generator, List, Dict, Any, Optional
 import dashscope
 from fastapi import HTTPException
+from openai import OpenAI
 
 # You should set DASHSCOPE_API_KEY in your environment variables
 # or provide it in the request if you want to support BYOK (Bring Your Own Key)
@@ -37,7 +38,7 @@ You must **STRICTLY ADHERE** to the tools, plugins, and configurations recommend
 - If the user asks a question covered by the Knowledge Base, cite the document name in your answer.
 
 **INTERNAL KNOWLEDGE BASE**:
-{{KNOWLEDGE_BASE}}
+{KNOWLEDGE_BASE}
 
 **Role & Principles**:
 1. **Source of Truth**: Your primary knowledge source is the "KNOWLEDGE BASE" above. Ignore your pre-trained knowledge if it conflicts with the Knowledge Base.
@@ -90,24 +91,42 @@ AI: "According to **04_AdGuardHome.md**, the recommended setup is to have AdGuar
 If a user asks about something outside of networking, hardware, or system administration, politely steer them back to your area of expertise.
 """
 
-def chat_stream(messages: List[Dict[str, str]], api_key: str = None) -> Generator[str, None, None]:
-    if api_key:
-        dashscope.api_key = api_key
-        
-    if not dashscope.api_key:
-        yield "Error: DashScope API Key is missing. Please configure it in the backend or settings."
-        return
+def chat_stream(messages: List[Dict[str, str]], config: Dict[str, Any] = None) -> Generator[str, None, None]:
+    # Default config
+    if config is None:
+        config = {}
+    
+    provider = config.get("provider", "dashscope")
+    model = config.get("model", "qwen-turbo")
+    api_key = config.get("api_key")
+    base_url = config.get("base_url")
 
     # Prepare messages with system prompt at the beginning
     msgs = [{'role': 'system', 'content': SYSTEM_PROMPT}] + messages
 
+    if provider == "dashscope":
+        yield from _stream_dashscope(msgs, model, api_key)
+    elif provider in ["openai", "deepseek", "moonshot", "claude", "gemini"]:
+        yield from _stream_openai_compatible(msgs, model, api_key, base_url)
+    else:
+        yield f"Error: Unsupported provider '{provider}'"
+
+def _stream_dashscope(messages: List[Dict[str, Any]], model: str, api_key: Optional[str]) -> Generator[str, None, None]:
+    if api_key:
+        dashscope.api_key = api_key
+    
+    # Fallback to env var if no key provided
+    if not dashscope.api_key:
+         yield "错误：DashScope API Key 缺失。请在后端环境变量或设置中配置。"
+         return
+
     try:
         responses = dashscope.Generation.call(
-            model=dashscope.Generation.Models.qwen_turbo, # or qwen-plus/max for better performance
-            messages=msgs,
-            result_format='message',  # set the result to be "message" format.
+            model=model,
+            messages=messages,
+            result_format='message',
             stream=True,
-            incremental_output=True  # get streaming output incrementally
+            incremental_output=True
         )
 
         for response in responses:
@@ -116,6 +135,27 @@ def chat_stream(messages: List[Dict[str, str]], api_key: str = None) -> Generato
                     yield response.output.choices[0].message.content
             else:
                 yield f"Error: {response.code} - {response.message}"
+                
+    except Exception as e:
+        yield f"Exception: {str(e)}"
+
+def _stream_openai_compatible(messages: List[Dict[str, Any]], model: str, api_key: Optional[str], base_url: Optional[str]) -> Generator[str, None, None]:
+    if not api_key:
+        yield "错误：缺少 API Key。请在设置中配置 API Key。"
+        return
+
+    try:
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        
+        stream = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            stream=True
+        )
+
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                yield chunk.choices[0].delta.content
                 
     except Exception as e:
         yield f"Exception: {str(e)}"

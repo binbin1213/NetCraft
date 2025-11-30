@@ -26,8 +26,10 @@ export interface User {
 interface AuthState {
     token: string | null;
     user: User | null;
+    loginModalOpen: boolean;
     setToken: (token: string | null) => void;
     setUser: (user: User | null) => void;
+    setLoginModalOpen: (open: boolean) => void;
     logout: () => void;
 }
 
@@ -52,8 +54,10 @@ const useStore = create<RFState>()(
         // Auth State
         token: null,
         user: null,
+        loginModalOpen: false,
         setToken: (token) => set({ token }),
         setUser: (user) => set({ user }),
+        setLoginModalOpen: (open) => set({ loginModalOpen: open }),
         logout: () => set({ token: null, user: null }),
 
         // Graph State

@@ -51,9 +51,7 @@
 ## Getting Started (快速开始)
 
 ### Prerequisites (前置要求)
-- Node.js 18+
-- Docker & Docker Compose (推荐用于数据库)
-- Python 3.10+ (后端服务)
+- Docker & Docker Compose
 
 ### Installation (安装)
 
@@ -63,32 +61,17 @@
    cd netcraft
    ```
 
-2. **Start Database (PostgreSQL)**
+2. **Start All Services**
    ```bash
-   docker-compose up -d
-   ```
-
-3. **Setup Backend**
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   pip install -r requirements.txt
+   # Set your API key (required for AI features)
+   # You can also set this in docker-compose.yml
+   export DASHSCOPE_API_KEY=your_api_key
    
-   # Configure .env (Create one if not exists)
-   # DATABASE_URL=postgresql://netcraft:netcraft_secret@localhost:5432/netcraft_db
-   # DASHSCOPE_API_KEY=your_api_key
+   docker-compose up --build -d
+   ```
    
-   uvicorn app.main:app --reload
-   ```
-
-4. **Start Frontend**
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-   Visit `http://localhost:5173` to start designing!
+3. **Access the Application**
+   Visit `http://localhost` to start designing!
 
 ---
 

@@ -1,6 +1,7 @@
 import useStore from '../store/useStore';
+import { API_BASE_URL } from '../config';
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = API_BASE_URL;
 
 // Helper to get headers with auth token
 const getHeaders = () => {
