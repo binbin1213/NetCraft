@@ -2,6 +2,7 @@ import Sidebar from './components/Sidebar/Sidebar';
 import Canvas from './components/Canvas/Canvas';
 import PropertiesPanel from './components/Properties/PropertiesPanel';
 import GuideSystem from './components/Guide/GuideSystem';
+import AutoSave from './components/AutoSave';
 import Login from './components/Auth/Login';
 import useStore from './store/useStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -33,6 +34,9 @@ function App() {
             <div className="flex w-screen h-screen overflow-hidden bg-slate-950 text-slate-100 relative">
                 {/* Intelligent Guide System (Invisible, just logic & notifications) */}
                 <GuideSystem />
+                
+                {/* Auto Save System (Invisible) */}
+                <AutoSave />
 
                 {/* Left Sidebar - Component Library */}
                 <Sidebar />

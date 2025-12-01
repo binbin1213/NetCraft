@@ -174,6 +174,7 @@ export default function DeviceNode({ data, selected }: NodeProps<DeviceData>) {
         position={Position.Top}
         id="wan"
         className="!bg-yellow-500 !w-3 !h-1 !rounded-none -top-[5px]"
+        title="WAN"
       />
 
       <div className="flex items-start gap-3">
@@ -270,8 +271,9 @@ export default function DeviceNode({ data, selected }: NodeProps<DeviceData>) {
                     type="source" 
                     position={Position.Bottom} 
                     id={`lan${index + 1}`} 
-                    className="!bg-slate-400 !w-3 !h-1 !rounded-none !absolute !transform !-translate-x-1/2"
+                    className="!bg-blue-500 !w-3 !h-1 !rounded-none !absolute !transform !-translate-x-1/2"
                     style={{ left }}
+                    title={`LAN ${index + 1}`}
                 />
             );
          })}

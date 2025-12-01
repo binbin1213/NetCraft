@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { PanelLeft, Settings2, Layers, LayoutTemplate, AlertCircle, Globe, Moon } from 'lucide-react';
+import { PanelLeft, Settings2, Layers, LayoutTemplate, AlertCircle, FolderOpen, Globe, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Divider, ConfigProvider, theme } from 'antd';
+import { Modal, ConfigProvider, theme, Divider } from 'antd';
 import { type DeviceType, type DeviceData } from '../../types/nodes';
 import { TEMPLATES, type Template } from '../../data/templates';
 import useStore from '../../store/useStore';
@@ -9,6 +9,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { type Node } from 'reactflow';
 import clsx from 'clsx';
 import { generateNextIP } from '../../utils/network';
+import ProjectManager from '../ProjectManager';
 
 interface DeviceItem {
   type: DeviceType;
@@ -19,6 +20,7 @@ export default function Sidebar() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<'devices' | 'templates'>('devices');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isProjectManagerOpen, setIsProjectManagerOpen] = useState(false);
   const { nodes, setNodes, setEdges, addNode } = useStore(useShallow((state: any) => ({ 
       nodes: state.nodes,
       setNodes: state.setNodes, 
@@ -123,9 +125,18 @@ export default function Sidebar() {
   return (
     <aside className="w-64 h-screen bg-slate-900 border-r border-slate-800 flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center gap-2">
-        <PanelLeft className="w-5 h-5 text-cyan-400" />
-        <h1 className="font-bold text-slate-100 tracking-wide">{t('app.title')}</h1>
+      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+            <PanelLeft className="w-5 h-5 text-cyan-400" />
+            <h1 className="font-bold text-slate-100 tracking-wide">{t('app.title')}</h1>
+        </div>
+        <button 
+            onClick={() => setIsProjectManagerOpen(true)}
+            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-cyan-400 transition-colors"
+            title="Project Manager"
+        >
+            <FolderOpen size={18} />
+        </button>
       </div>
 
       {/* Tabs */}
@@ -195,6 +206,9 @@ export default function Sidebar() {
           <span>{t('app.settings')}</span>
         </button>
       </div>
+
+      {/* Project Manager Modal */}
+      <ProjectManager open={isProjectManagerOpen} onClose={() => setIsProjectManagerOpen(false)} />
 
       {/* Settings Modal */}
       <ConfigProvider
