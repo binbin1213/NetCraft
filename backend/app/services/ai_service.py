@@ -11,9 +11,20 @@ from openai import OpenAI
 dashscope.api_key = os.getenv("DASHSCOPE_API_KEY")
 
 def load_knowledge_base():
-    kb_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "RAG", "KnowledgeBase", "*.md")
+    # 1. Try loading from local development path (relative to this file)
+    local_kb_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "RAG", "KnowledgeBase", "*.md")
+    
+    # 2. Try loading from Docker container path (if copied via Dockerfile)
+    docker_kb_path = "/code/RAG/KnowledgeBase/*.md"
+
+    # Determine which path to use
+    if glob.glob(local_kb_path):
+        target_path = local_kb_path
+    else:
+        target_path = docker_kb_path
+
     knowledge_content = ""
-    for file_path in sorted(glob.glob(kb_path)):
+    for file_path in sorted(glob.glob(target_path)):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 filename = os.path.basename(file_path)
@@ -22,6 +33,10 @@ def load_knowledge_base():
                 knowledge_content += f"\n--- END KNOWLEDGE: {filename} ---\n"
         except Exception as e:
             print(f"Error loading knowledge file {file_path}: {e}")
+    
+    if not knowledge_content:
+        print(f"Warning: No knowledge base files found at {target_path}")
+        
     return knowledge_content
 
 KNOWLEDGE_BASE = load_knowledge_base()

@@ -11,4 +11,7 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 COPY ./app /code/app
 
+# 复制知识库文件到镜像中
+COPY ../RAG/KnowledgeBase /code/RAG/KnowledgeBase
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -84,6 +84,12 @@ function Flow() {
   // Keyboard Shortcuts
   useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
+          // Ignore keyboard shortcuts when typing in input fields
+          const target = event.target as HTMLElement;
+          if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable) {
+              return;
+          }
+
           const isCtrlOrCmd = event.ctrlKey || event.metaKey;
           
           // Copy: Ctrl+C
