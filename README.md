@@ -68,17 +68,23 @@
     curl -O https://raw.githubusercontent.com/binbin1213/netcraft/main/docker-compose.prod.yml
     ```
 
-2.  **修改镜像名称**
+2.  **启动服务**
     
-    打开 `docker-compose.prod.yml`，将 `image: binbin1213/netcraft-frontend:latest` 中的 `binbin1213` 替换为实际的 Docker Hub 用户名。
+    因为您已经运行过容器，需要拉取最新镜像并重新创建容器：
 
-3.  **启动服务**
     ```bash
-    # 设置 API Key (如果不设置，AI 功能将不可用)
-    export DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
+    # 1. 拉取最新镜像
+    docker-compose -f docker-compose.prod.yml pull
 
-    # 使用生产环境配置启动
+    # 2. 重新创建并启动容器 (这会自动使用新镜像)
     docker-compose -f docker-compose.prod.yml up -d
+    ```
+
+    > **提示**：Docker Compose 足够智能，如果镜像没有变化，它不会重启容器。如果拉取到了新镜像，`up -d` 命令会自动重建并重启相关服务，您的数据（数据库）不会丢失。
+
+3.  **清理旧镜像 (可选)**
+    ```bash
+    docker image prune -f
     ```
 
 4.  **访问应用**

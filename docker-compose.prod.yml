@@ -3,7 +3,8 @@ version: '3.8'
 services:
   # Frontend Service
   frontend:
-    image: binbin1213/netcraft-frontend:latest
+    # Pull from GitHub Container Registry
+    image: ghcr.io/binbin1213/netcraft-frontend:latest
     container_name: netcraft-frontend
     restart: always
     ports:
@@ -15,7 +16,8 @@ services:
 
   # Backend Service
   backend:
-    image: binbin1213/netcraft-backend:latest
+    # Pull from GitHub Container Registry
+    image: ghcr.io/binbin1213/netcraft-backend:latest
     container_name: netcraft-backend
     restart: always
     environment:
