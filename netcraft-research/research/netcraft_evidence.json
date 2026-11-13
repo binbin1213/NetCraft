@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "topic": "netcraft",
+  "target_entities": [
+    {
+      "entity": "SECRET_KEY",
+      "aliases": [
+        "SECRET_KEY"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "ACCESS_TOKEN_EXPIRE_MINUTES",
+      "aliases": [
+        "ACCESS_TOKEN_EXPIRE_MINUTES"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "validate_password",
+      "aliases": [
+        "validate_password"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "ALLOWED_ORIGINS",
+      "aliases": [
+        "ALLOWED_ORIGINS"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "dagreGraph",
+      "aliases": [
+        "dagreGraph"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "dashscope.api_key",
+      "aliases": [
+        "dashscope.api_key"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "netcraft-storage",
+      "aliases": [
+        "netcraft-storage"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "netcraft-backend",
+      "aliases": [
+        "netcraft-backend"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "requirements.txt",
+      "aliases": [
+        "requirements.txt"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "interfaceCount",
+      "aliases": [
+        "interfaceCount"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "CryptContext",
+      "aliases": [
+        "CryptContext"
+      ],
+      "official_domains": []
+    },
+    {
+      "entity": "echo=True",
+      "aliases": [
+        "echo=True"
+      ],
+      "official_domains": []
+    }
+  ],
+  "evidence": [
+    {
+      "entity": "SECRET_KEY",
+      "claim": "SECRET_KEY is assigned from os.getenv with a hardcoded fallback hash.",
+      "source_url": "file:backend/app/auth.py#L8",
+      "source_type": "user_input",
+      "evidence_excerpt": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7\")",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "ACCESS_TOKEN_EXPIRE_MINUTES",
+      "claim": "ACCESS_TOKEN_EXPIRE_MINUTES is set to 60 * 24 * 7 days, but create_access_token falls back to timedelta(minutes=15) when expires_delta is not passed.",
+      "source_url": "file:backend/app/auth.py#L10",
+      "source_type": "user_input",
+      "evidence_excerpt": "ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days for simplicity\n        expire = datetime.utcnow() + timedelta(minutes=15)",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "validate_password",
+      "claim": "validate_password is imported by backend test_password_validation.py: from app.auth import validate_password.",
+      "source_url": "file:backend/test_password_validation.py#L2",
+      "source_type": "user_input",
+      "evidence_excerpt": "from app.auth import validate_password",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "ALLOWED_ORIGINS",
+      "claim": "ALLOWED_ORIGINS=http://localhost:5173,http://example.com in .env.example.",
+      "source_url": "file:.env.example#L7",
+      "source_type": "user_input",
+      "evidence_excerpt": "ALLOWED_ORIGINS=http://localhost:5173,http://example.com",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "dagreGraph",
+      "claim": "dagreGraph = new dagre.graphlib.Graph() and dagreGraph.setNode(node.id) per node.",
+      "source_url": "file:frontend/src/utils/autoLayout.ts#L4",
+      "source_type": "user_input",
+      "evidence_excerpt": "const dagreGraph = new dagre.graphlib.Graph();\n    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "dashscope.api_key",
+      "claim": "dashscope.api_key = os.getenv(\"DASHSCOPE_API_KEY\") then dashscope.api_key = api_key.",
+      "source_url": "file:backend/app/services/ai_service.py#L11",
+      "source_type": "user_input",
+      "evidence_excerpt": "dashscope.api_key = os.getenv(\"DASHSCOPE_API_KEY\")\n        dashscope.api_key = api_key",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "netcraft-storage",
+      "claim": "The persisted store name is netcraft-storage and partialize includes the token field.",
+      "source_url": "file:frontend/src/store/useStore.ts#L235",
+      "source_type": "user_input",
+      "evidence_excerpt": "name: 'netcraft-storage',\n            token: state.token,",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "netcraft-backend",
+      "claim": "docker-compose.prod.yml pins the backend image to netcraft-backend:latest.",
+      "source_url": "file:docker-compose.prod.yml#L20",
+      "source_type": "user_input",
+      "evidence_excerpt": "image: ghcr.io/binbin1213/netcraft-backend:latest",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "requirements.txt",
+      "claim": "backend/Dockerfile copies requirements.txt using a path prefixed with ./backend/.",
+      "source_url": "file:backend/Dockerfile#L8",
+      "source_type": "user_input",
+      "evidence_excerpt": "COPY ./backend/requirements.txt /code/requirements.txt",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "interfaceCount",
+      "claim": "Array.from({ length: data.interfaceCount ?? 3 }) builds the LAN handle list.",
+      "source_url": "file:frontend/src/components/Canvas/DeviceNode.tsx#L262",
+      "source_type": "user_input",
+      "evidence_excerpt": "{Array.from({ length: data.interfaceCount ?? 3 }).map((_, index) => {",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "CryptContext",
+      "claim": "pwd_context = CryptContext(schemes=[\"argon2\"]).",
+      "source_url": "file:backend/app/auth.py#L12",
+      "source_type": "user_input",
+      "evidence_excerpt": "pwd_context = CryptContext(schemes=[\"argon2\"], deprecated=\"auto\")",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "echo=True",
+      "claim": "The SQLModel engine is created with echo=True hardcoded.",
+      "source_url": "file:backend/app/database.py#L20",
+      "source_type": "user_input",
+      "evidence_excerpt": "engine = create_engine(database_url, echo=True, connect_args=connect_args)",
+      "evidence_basis": "user_input",
+      "confidence": "high",
+      "status": "verified"
+    },
+    {
+      "entity": "validate_password",
+      "claim": "The backend auth module defines verify_password, get_password_hash and create_access_token.",
+      "source_url": "file:backend/app/auth.py#L14",
+      "source_type": "user_input",
+      "evidence_excerpt": "def verify_password(plain_password, hashed_password):",
+      "evidence_basis": "user_input",
+      "confidence": "medium",
+      "status": "unverified",
+      "unverified_reason": "Whether validate_password is absent is a negative fact established by a full-tree grep (0 hits for 'def validate_password'), which cannot be bound to a single excerpt."
+    },
+    {
+      "entity": "ALLOWED_ORIGINS",
+      "claim": "The FastAPI CORS middleware allow_origins list is hardcoded to http://localhost:5173.",
+      "source_url": "file:backend/app/main.py#L31",
+      "source_type": "user_input",
+      "evidence_excerpt": "allow_origins=[\"http://localhost:5173\"], # Frontend URL",
+      "evidence_basis": "user_input",
+      "confidence": "medium",
+      "status": "unverified",
+      "unverified_reason": "The excerpt proves the hardcoded value but cannot prove the absence of an os.getenv read elsewhere in the file; that needs a full-file scan."
+    },
+    {
+      "entity": "requirements.txt",
+      "claim": "docker-compose.yml sets the backend build context to ./backend.",
+      "source_url": "file:docker-compose.yml#L21",
+      "source_type": "user_input",
+      "evidence_excerpt": "build: ./backend",
+      "evidence_basis": "user_input",
+      "confidence": "medium",
+      "status": "unverified",
+      "unverified_reason": "The build-failure conclusion needs the COPY paths from a second file plus an actual docker build; the local Docker daemon was not running, so no build log exists."
+    }
+  ]
+}

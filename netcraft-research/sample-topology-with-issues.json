@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "imp_modem",
+      "type": "deviceNode",
+      "position": { "x": 300, "y": 60 },
+      "data": { "name": "运营商光猫", "type": "modem", "ip": "192.168.1.1", "status": "online", "services": [] }
+    },
+    {
+      "id": "imp_router",
+      "type": "deviceNode",
+      "position": { "x": 300, "y": 220 },
+      "data": { "name": "主路由", "type": "router", "ip": "192.168.1.1", "interfaceCount": 4, "status": "online", "services": [] }
+    },
+    {
+      "id": "imp_switch",
+      "type": "deviceNode",
+      "position": { "x": 300, "y": 380 },
+      "data": { "name": "2.5G 交换机", "type": "switch", "ip": "192.168.1.2", "interfaceCount": 8, "status": "online", "services": [] }
+    },
+    {
+      "id": "imp_pve",
+      "type": "deviceNode",
+      "position": { "x": 120, "y": 540 },
+      "data": { "name": "PVE 主机", "type": "pve", "ip": "192.168.1.10", "status": "online", "services": [] }
+    },
+    {
+      "id": "imp_pc",
+      "type": "deviceNode",
+      "position": { "x": 480, "y": 540 },
+      "data": { "name": "工作站", "type": "pc", "ip": "192.168.1.x", "status": "online", "services": [] }
+    }
+  ],
+  "edges": [
+    { "id": "imp_e1", "source": "imp_modem", "target": "imp_router", "type": "smartEdge", "data": { "type": "eth_1g" } },
+    { "id": "imp_e2", "source": "imp_router", "target": "imp_switch", "type": "smartEdge", "data": { "type": "eth_10g" } },
+    { "id": "imp_e3", "source": "imp_switch", "target": "imp_pve", "type": "smartEdge", "data": { "type": "eth_10g" } },
+    { "id": "imp_e4", "source": "imp_switch", "target": "imp_pc", "type": "smartEdge", "data": { "type": "eth_1g" } },
+    { "id": "imp_e5", "source": "imp_pve", "target": "imp_switch", "type": "smartEdge", "data": { "type": "eth_10g" } }
+  ],
+  "version": "1.0.0"
+}

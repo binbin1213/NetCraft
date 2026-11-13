@@ -1,0 +1,412 @@
+{
+  "ok": true,
+  "quality_ok": true,
+  "delivery_allowed": true,
+  "handoff_status": "full",
+  "validator": "research-synthesis",
+  "route": "C",
+  "topic": "netcraft",
+  "research_dir": "/Users/binbin/Desktop/NetCraft/netcraft-research/research",
+  "min_dimensions": 6,
+  "dimension_count": 6,
+  "wide_count": 0,
+  "coverage": {
+    "actual_dimensions": 6,
+    "recommended_dimensions": 6,
+    "dimension_ratio": 1.0,
+    "wide_required": false,
+    "wide_present": false
+  },
+  "files_checked": [
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_cross_verification.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_dim01.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_dim02.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_dim03.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_dim04.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_dim05.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_dim06.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_evidence.json",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_file_analysis.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_final.md",
+    "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_insight.md"
+  ],
+  "issues": [],
+  "warnings": [
+    "netcraft_evidence.json: evidence.12.evidence_excerpt does not name entity 'validate_password' or one of its aliases",
+    "netcraft_evidence.json: evidence.12.evidence_excerpt does not support the claim closely enough (token overlap 1/7, requires 2)",
+    "netcraft_evidence.json: evidence.12: status=unverified; excluded from downstream verified evidence",
+    "netcraft_evidence.json: evidence.13.evidence_excerpt does not name entity 'ALLOWED_ORIGINS' or one of its aliases",
+    "netcraft_evidence.json: evidence.13: status=unverified; excluded from downstream verified evidence",
+    "netcraft_evidence.json: evidence.14.evidence_excerpt does not name entity 'requirements.txt' or one of its aliases",
+    "netcraft_evidence.json: evidence.14: status=unverified; excluded from downstream verified evidence"
+  ],
+  "presentation_handoff": {
+    "schema_version": 1,
+    "delivery_mode": "full",
+    "verified_facts": [
+      {
+        "id": "fact_92f561d0140349a7",
+        "entity": "SECRET_KEY",
+        "aliases": [
+          "SECRET_KEY"
+        ],
+        "claim": "SECRET_KEY is assigned from os.getenv with a hardcoded fallback hash.",
+        "source_type": "user_input",
+        "source_url": "file:backend/app/auth.py#L8",
+        "canonical": "SECRET_KEY | SECRET_KEY is assigned from os.getenv with a hardcoded fallback hash. | user_input | file:backend/app/auth.py#L8",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_dc3ffcce10ff9b00",
+        "entity": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "aliases": [
+          "ACCESS_TOKEN_EXPIRE_MINUTES"
+        ],
+        "claim": "ACCESS_TOKEN_EXPIRE_MINUTES is set to 60 * 24 * 7 days, but create_access_token falls back to timedelta(minutes=15) when expires_delta is not passed.",
+        "source_type": "user_input",
+        "source_url": "file:backend/app/auth.py#L10",
+        "canonical": "ACCESS_TOKEN_EXPIRE_MINUTES | ACCESS_TOKEN_EXPIRE_MINUTES is set to 60 * 24 * 7 days, but create_access_token falls back to timedelta(minutes=15) when expires_delta is not passed. | user_input | file:backend/app/auth.py#L10",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_9ab2d42332fb9637",
+        "entity": "validate_password",
+        "aliases": [
+          "validate_password"
+        ],
+        "claim": "validate_password is imported by backend test_password_validation.py: from app.auth import validate_password.",
+        "source_type": "user_input",
+        "source_url": "file:backend/test_password_validation.py#L2",
+        "canonical": "validate_password | validate_password is imported by backend test_password_validation.py: from app.auth import validate_password. | user_input | file:backend/test_password_validation.py#L2",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_19e4e993013549b4",
+        "entity": "ALLOWED_ORIGINS",
+        "aliases": [
+          "ALLOWED_ORIGINS"
+        ],
+        "claim": "ALLOWED_ORIGINS=http://localhost:5173,http://example.com in .env.example.",
+        "source_type": "user_input",
+        "source_url": "file:.env.example#L7",
+        "canonical": "ALLOWED_ORIGINS | ALLOWED_ORIGINS=http://localhost:5173,http://example.com in .env.example. | user_input | file:.env.example#L7",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_196c3ea9568c2d96",
+        "entity": "dagreGraph",
+        "aliases": [
+          "dagreGraph"
+        ],
+        "claim": "dagreGraph = new dagre.graphlib.Graph() and dagreGraph.setNode(node.id) per node.",
+        "source_type": "user_input",
+        "source_url": "file:frontend/src/utils/autoLayout.ts#L4",
+        "canonical": "dagreGraph | dagreGraph = new dagre.graphlib.Graph() and dagreGraph.setNode(node.id) per node. | user_input | file:frontend/src/utils/autoLayout.ts#L4",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_7469c769d2577b48",
+        "entity": "dashscope.api_key",
+        "aliases": [
+          "dashscope.api_key"
+        ],
+        "claim": "dashscope.api_key = os.getenv(\"DASHSCOPE_API_KEY\") then dashscope.api_key = api_key.",
+        "source_type": "user_input",
+        "source_url": "file:backend/app/services/ai_service.py#L11",
+        "canonical": "dashscope.api_key | dashscope.api_key = os.getenv(\"DASHSCOPE_API_KEY\") then dashscope.api_key = api_key. | user_input | file:backend/app/services/ai_service.py#L11",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_49603a9343c81ad6",
+        "entity": "netcraft-storage",
+        "aliases": [
+          "netcraft-storage"
+        ],
+        "claim": "The persisted store name is netcraft-storage and partialize includes the token field.",
+        "source_type": "user_input",
+        "source_url": "file:frontend/src/store/useStore.ts#L235",
+        "canonical": "netcraft-storage | The persisted store name is netcraft-storage and partialize includes the token field. | user_input | file:frontend/src/store/useStore.ts#L235",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_e84215909bfed6dc",
+        "entity": "netcraft-backend",
+        "aliases": [
+          "netcraft-backend"
+        ],
+        "claim": "docker-compose.prod.yml pins the backend image to netcraft-backend:latest.",
+        "source_type": "user_input",
+        "source_url": "file:docker-compose.prod.yml#L20",
+        "canonical": "netcraft-backend | docker-compose.prod.yml pins the backend image to netcraft-backend:latest. | user_input | file:docker-compose.prod.yml#L20",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_666ac7a4778d5880",
+        "entity": "requirements.txt",
+        "aliases": [
+          "requirements.txt"
+        ],
+        "claim": "backend/Dockerfile copies requirements.txt using a path prefixed with ./backend/.",
+        "source_type": "user_input",
+        "source_url": "file:backend/Dockerfile#L8",
+        "canonical": "requirements.txt | backend/Dockerfile copies requirements.txt using a path prefixed with ./backend/. | user_input | file:backend/Dockerfile#L8",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_388283acd69bf610",
+        "entity": "interfaceCount",
+        "aliases": [
+          "interfaceCount"
+        ],
+        "claim": "Array.from({ length: data.interfaceCount ?? 3 }) builds the LAN handle list.",
+        "source_type": "user_input",
+        "source_url": "file:frontend/src/components/Canvas/DeviceNode.tsx#L262",
+        "canonical": "interfaceCount | Array.from({ length: data.interfaceCount ?? 3 }) builds the LAN handle list. | user_input | file:frontend/src/components/Canvas/DeviceNode.tsx#L262",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_85283ad59414ccd3",
+        "entity": "CryptContext",
+        "aliases": [
+          "CryptContext"
+        ],
+        "claim": "pwd_context = CryptContext(schemes=[\"argon2\"]).",
+        "source_type": "user_input",
+        "source_url": "file:backend/app/auth.py#L12",
+        "canonical": "CryptContext | pwd_context = CryptContext(schemes=[\"argon2\"]). | user_input | file:backend/app/auth.py#L12",
+        "evidence_basis": "user_input"
+      },
+      {
+        "id": "fact_d5b53283dc36d3b7",
+        "entity": "echo=True",
+        "aliases": [
+          "echo=True"
+        ],
+        "claim": "The SQLModel engine is created with echo=True hardcoded.",
+        "source_type": "user_input",
+        "source_url": "file:backend/app/database.py#L20",
+        "canonical": "echo=True | The SQLModel engine is created with echo=True hardcoded. | user_input | file:backend/app/database.py#L20",
+        "evidence_basis": "user_input"
+      }
+    ],
+    "gaps": [
+      "netcraft_evidence.json: evidence.12.evidence_excerpt does not name entity 'validate_password' or one of its aliases",
+      "netcraft_evidence.json: evidence.12.evidence_excerpt does not support the claim closely enough (token overlap 1/7, requires 2)",
+      "netcraft_evidence.json: evidence.12: status=unverified; excluded from downstream verified evidence",
+      "netcraft_evidence.json: evidence.13.evidence_excerpt does not name entity 'ALLOWED_ORIGINS' or one of its aliases",
+      "netcraft_evidence.json: evidence.13: status=unverified; excluded from downstream verified evidence",
+      "netcraft_evidence.json: evidence.14.evidence_excerpt does not name entity 'requirements.txt' or one of its aliases",
+      "netcraft_evidence.json: evidence.14: status=unverified; excluded from downstream verified evidence"
+    ],
+    "quality_summary": {
+      "quality_ok": true,
+      "issue_count": 0,
+      "warning_count": 7,
+      "actual_dimensions": 6,
+      "recommended_dimensions": 6
+    },
+    "context_files": [
+      "netcraft_cross_verification.md",
+      "netcraft_dim01.md",
+      "netcraft_dim02.md",
+      "netcraft_dim03.md",
+      "netcraft_dim04.md",
+      "netcraft_dim05.md",
+      "netcraft_dim06.md",
+      "netcraft_evidence.json",
+      "netcraft_file_analysis.md",
+      "netcraft_final.md",
+      "netcraft_insight.md"
+    ]
+  },
+  "evidence_schema_version": 1,
+  "evidence_file": "/Users/binbin/Desktop/NetCraft/netcraft-research/research/netcraft_evidence.json",
+  "target_entity_count": 12,
+  "evidence_count": 15,
+  "verified_evidence_count": 12,
+  "conflicting_evidence_count": 0,
+  "unverified_evidence_count": 3,
+  "first_party_entity_count": 0,
+  "verified_evidence": [
+    {
+      "id": "fact_92f561d0140349a7",
+      "entity": "SECRET_KEY",
+      "aliases": [
+        "SECRET_KEY"
+      ],
+      "claim": "SECRET_KEY is assigned from os.getenv with a hardcoded fallback hash.",
+      "source_url": "file:backend/app/auth.py#L8",
+      "source_type": "user_input",
+      "evidence_excerpt": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7\")",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "SECRET_KEY | SECRET_KEY is assigned from os.getenv with a hardcoded fallback hash. | user_input | file:backend/app/auth.py#L8",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_dc3ffcce10ff9b00",
+      "entity": "ACCESS_TOKEN_EXPIRE_MINUTES",
+      "aliases": [
+        "ACCESS_TOKEN_EXPIRE_MINUTES"
+      ],
+      "claim": "ACCESS_TOKEN_EXPIRE_MINUTES is set to 60 * 24 * 7 days, but create_access_token falls back to timedelta(minutes=15) when expires_delta is not passed.",
+      "source_url": "file:backend/app/auth.py#L10",
+      "source_type": "user_input",
+      "evidence_excerpt": "ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days for simplicity\n        expire = datetime.utcnow() + timedelta(minutes=15)",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "ACCESS_TOKEN_EXPIRE_MINUTES | ACCESS_TOKEN_EXPIRE_MINUTES is set to 60 * 24 * 7 days, but create_access_token falls back to timedelta(minutes=15) when expires_delta is not passed. | user_input | file:backend/app/auth.py#L10",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_9ab2d42332fb9637",
+      "entity": "validate_password",
+      "aliases": [
+        "validate_password"
+      ],
+      "claim": "validate_password is imported by backend test_password_validation.py: from app.auth import validate_password.",
+      "source_url": "file:backend/test_password_validation.py#L2",
+      "source_type": "user_input",
+      "evidence_excerpt": "from app.auth import validate_password",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "validate_password | validate_password is imported by backend test_password_validation.py: from app.auth import validate_password. | user_input | file:backend/test_password_validation.py#L2",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_19e4e993013549b4",
+      "entity": "ALLOWED_ORIGINS",
+      "aliases": [
+        "ALLOWED_ORIGINS"
+      ],
+      "claim": "ALLOWED_ORIGINS=http://localhost:5173,http://example.com in .env.example.",
+      "source_url": "file:.env.example#L7",
+      "source_type": "user_input",
+      "evidence_excerpt": "ALLOWED_ORIGINS=http://localhost:5173,http://example.com",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "ALLOWED_ORIGINS | ALLOWED_ORIGINS=http://localhost:5173,http://example.com in .env.example. | user_input | file:.env.example#L7",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_196c3ea9568c2d96",
+      "entity": "dagreGraph",
+      "aliases": [
+        "dagreGraph"
+      ],
+      "claim": "dagreGraph = new dagre.graphlib.Graph() and dagreGraph.setNode(node.id) per node.",
+      "source_url": "file:frontend/src/utils/autoLayout.ts#L4",
+      "source_type": "user_input",
+      "evidence_excerpt": "const dagreGraph = new dagre.graphlib.Graph();\n    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "dagreGraph | dagreGraph = new dagre.graphlib.Graph() and dagreGraph.setNode(node.id) per node. | user_input | file:frontend/src/utils/autoLayout.ts#L4",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_7469c769d2577b48",
+      "entity": "dashscope.api_key",
+      "aliases": [
+        "dashscope.api_key"
+      ],
+      "claim": "dashscope.api_key = os.getenv(\"DASHSCOPE_API_KEY\") then dashscope.api_key = api_key.",
+      "source_url": "file:backend/app/services/ai_service.py#L11",
+      "source_type": "user_input",
+      "evidence_excerpt": "dashscope.api_key = os.getenv(\"DASHSCOPE_API_KEY\")\n        dashscope.api_key = api_key",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "dashscope.api_key | dashscope.api_key = os.getenv(\"DASHSCOPE_API_KEY\") then dashscope.api_key = api_key. | user_input | file:backend/app/services/ai_service.py#L11",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_49603a9343c81ad6",
+      "entity": "netcraft-storage",
+      "aliases": [
+        "netcraft-storage"
+      ],
+      "claim": "The persisted store name is netcraft-storage and partialize includes the token field.",
+      "source_url": "file:frontend/src/store/useStore.ts#L235",
+      "source_type": "user_input",
+      "evidence_excerpt": "name: 'netcraft-storage',\n            token: state.token,",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "netcraft-storage | The persisted store name is netcraft-storage and partialize includes the token field. | user_input | file:frontend/src/store/useStore.ts#L235",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_e84215909bfed6dc",
+      "entity": "netcraft-backend",
+      "aliases": [
+        "netcraft-backend"
+      ],
+      "claim": "docker-compose.prod.yml pins the backend image to netcraft-backend:latest.",
+      "source_url": "file:docker-compose.prod.yml#L20",
+      "source_type": "user_input",
+      "evidence_excerpt": "image: ghcr.io/binbin1213/netcraft-backend:latest",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "netcraft-backend | docker-compose.prod.yml pins the backend image to netcraft-backend:latest. | user_input | file:docker-compose.prod.yml#L20",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_666ac7a4778d5880",
+      "entity": "requirements.txt",
+      "aliases": [
+        "requirements.txt"
+      ],
+      "claim": "backend/Dockerfile copies requirements.txt using a path prefixed with ./backend/.",
+      "source_url": "file:backend/Dockerfile#L8",
+      "source_type": "user_input",
+      "evidence_excerpt": "COPY ./backend/requirements.txt /code/requirements.txt",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "requirements.txt | backend/Dockerfile copies requirements.txt using a path prefixed with ./backend/. | user_input | file:backend/Dockerfile#L8",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_388283acd69bf610",
+      "entity": "interfaceCount",
+      "aliases": [
+        "interfaceCount"
+      ],
+      "claim": "Array.from({ length: data.interfaceCount ?? 3 }) builds the LAN handle list.",
+      "source_url": "file:frontend/src/components/Canvas/DeviceNode.tsx#L262",
+      "source_type": "user_input",
+      "evidence_excerpt": "{Array.from({ length: data.interfaceCount ?? 3 }).map((_, index) => {",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "interfaceCount | Array.from({ length: data.interfaceCount ?? 3 }) builds the LAN handle list. | user_input | file:frontend/src/components/Canvas/DeviceNode.tsx#L262",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_85283ad59414ccd3",
+      "entity": "CryptContext",
+      "aliases": [
+        "CryptContext"
+      ],
+      "claim": "pwd_context = CryptContext(schemes=[\"argon2\"]).",
+      "source_url": "file:backend/app/auth.py#L12",
+      "source_type": "user_input",
+      "evidence_excerpt": "pwd_context = CryptContext(schemes=[\"argon2\"], deprecated=\"auto\")",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "CryptContext | pwd_context = CryptContext(schemes=[\"argon2\"]). | user_input | file:backend/app/auth.py#L12",
+      "evidence_basis": "user_input"
+    },
+    {
+      "id": "fact_d5b53283dc36d3b7",
+      "entity": "echo=True",
+      "aliases": [
+        "echo=True"
+      ],
+      "claim": "The SQLModel engine is created with echo=True hardcoded.",
+      "source_url": "file:backend/app/database.py#L20",
+      "source_type": "user_input",
+      "evidence_excerpt": "engine = create_engine(database_url, echo=True, connect_args=connect_args)",
+      "confidence": "high",
+      "status": "verified",
+      "canonical": "echo=True | The SQLModel engine is created with echo=True hardcoded. | user_input | file:backend/app/database.py#L20",
+      "evidence_basis": "user_input"
+    }
+  ]
+}
