@@ -17,11 +17,14 @@ services:
   # Backend Service
   backend:
     # Pull from GitHub Container Registry
-    image: ghcr.io/binbin1213/netcraft-backend:latest
+    # Pin IMAGE_TAG to a git sha to roll back to a known good build.
+    image: ghcr.io/binbin1213/netcraft-backend:${IMAGE_TAG:-latest}
     container_name: netcraft-backend
     restart: always
     environment:
-      - DATABASE_URL=postgresql://netcraft:netcraft_secret@db:5432/netcraft_db
+      - DATABASE_URL=postgresql://netcraft:${POSTGRES_PASSWORD:-netcraft_secret}@db:5432/netcraft_db
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
       # DashScope API Key for AI features
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
     depends_on:
@@ -38,7 +41,7 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=netcraft
-      - POSTGRES_PASSWORD=netcraft_secret
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-netcraft_secret}
       - POSTGRES_DB=netcraft_db
     networks:
       - netcraft-network

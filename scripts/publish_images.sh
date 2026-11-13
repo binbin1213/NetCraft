@@ -34,7 +34,7 @@ docker push $USERNAME/netcraft-frontend:latest
 # Build and Push Backend
 echo "--------------------------------"
 echo "Building Backend Image..."
-docker build -t $USERNAME/netcraft-backend:latest ./backend
+docker build -f backend/Dockerfile -t $USERNAME/netcraft-backend:latest .
 
 echo "Pushing Backend Image..."
 docker push $USERNAME/netcraft-backend:latest

@@ -18,13 +18,19 @@ services:
 
   # Backend Service (FastAPI)
   backend:
-    build: ./backend
+    # The Dockerfile copies both ./backend and ./RAG, so the build context
+    # must be the repository root (same as CI).
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: netcraft-backend
     restart: always
     environment:
-      - DATABASE_URL=postgresql://netcraft:netcraft_secret@db:5432/netcraft_db
+      - DATABASE_URL=postgresql://netcraft:${POSTGRES_PASSWORD:-netcraft_secret}@db:5432/netcraft_db
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost,http://localhost:5173}
       # Pass DASHSCOPE_API_KEY from host env or .env file if needed
-      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY} 
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
     ports:
       - "8000:8000" # Optional: Expose for debugging, but frontend communicates via internal network
     depends_on:
@@ -41,7 +47,7 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=netcraft
-      - POSTGRES_PASSWORD=netcraft_secret
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-netcraft_secret}
       - POSTGRES_DB=netcraft_db
     networks:
       - netcraft-network
