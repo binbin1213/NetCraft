@@ -16,8 +16,11 @@ Desktop.ini
 
 # Backend (Python)
 backend/__pycache__/
+backend/**/__pycache__/
 backend/*.py[cod]
-backend/*$py.class
+backend/**/*.py[cod]
+__pycache__/
+*.py[cod]
 backend/venv/
 backend/.env
 backend/netcraft.db
@@ -48,3 +51,8 @@ UI.md
 AI Agent.md
 改造.md
 netcraft-data-*.json
+
+# Local QA screenshots
+netcraft-ui*.png
+netcraft-node-added.png
+nc-*.png
