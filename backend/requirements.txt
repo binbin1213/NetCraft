@@ -1,12 +1,14 @@
-fastapi
-uvicorn
-sqlmodel
-pydantic
-python-multipart
-dashscope
-python-dotenv
-psycopg2-binary
-passlib[argon2]
-pyjwt
-python-jose
-openai
+# Pinned to the versions this project was last verified against.
+# Bumping sqlmodel below 0.0.49 requires reverting the timezone-aware
+# datetimes in app/models.py (SQLModel rejects naive datetimes on insert).
+fastapi==0.162.5
+uvicorn==0.54.0
+sqlmodel==0.0.49
+pydantic==2.14.3
+python-multipart==0.0.33
+dashscope==2.0.4
+python-dotenv==1.2.4
+psycopg2-binary==2.9.10
+passlib[argon2]==1.7.4
+python-jose==3.5.0
+openai==3.50.0
