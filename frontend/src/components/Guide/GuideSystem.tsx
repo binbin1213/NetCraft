@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { notification, Button } from 'antd';
 import { Lightbulb, X } from 'lucide-react';
-import useStore from '../../store/useStore';
+import useStore, { type RFStateShape } from '../../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { type DeviceType, type DeviceData, type ConnectionType } from '../../types/nodes';
 import { type Node, type Edge } from 'reactflow';
 
-const selector = (state: any) => ({
+const selector = (state: RFStateShape) => ({
   nodes: state.nodes,
   addNode: state.addNode,
   addEdge: state.addEdge, // Import addEdge
@@ -15,11 +15,13 @@ const selector = (state: any) => ({
   onConnect: state.onConnect,
 });
 
+interface Rule {
+    messageKey: string;
+    options: DeviceType[];
+}
+
 // Recommendation Logic Map
-const RECOMMENDATIONS: Partial<Record<DeviceType, { 
-    messageKey: string; 
-    options: DeviceType[]; 
-}>> = {
+const RECOMMENDATIONS: Partial<Record<DeviceType, Rule>> = {
     modem: {
         messageKey: 'guide.addRouter',
         options: ['router'],
@@ -68,27 +70,13 @@ const getEdgeId = () => `guide_edge_${id++}`;
 
 export default function GuideSystem() {
     const { t } = useTranslation();
-    const { nodes, addNode, addEdge } = useStore(useShallow(selector));
-    const [lastNodeCount, setLastNodeCount] = useState(0);
+    const { addNode, addEdge } = useStore(useShallow(selector));
     const [api, contextHolder] = notification.useNotification();
+    // Latest render's callback, so the store subscription below never goes stale
+    // when the language or notification API changes.
+    const showRef = useRef<(node: Node<DeviceData>, rule: Rule) => void>(() => {});
 
-    useEffect(() => {
-        // Only trigger when a node is ADDED (count increases)
-        if (nodes.length > lastNodeCount && nodes.length > 0) {
-            const lastNode = nodes[nodes.length - 1];
-            const rule = RECOMMENDATIONS[lastNode.data.type as DeviceType];
-
-            if (rule) {
-                // Small delay to make it feel natural
-                setTimeout(() => {
-                    showRecommendation(lastNode, rule);
-                }, 600);
-            }
-        }
-        setLastNodeCount(nodes.length);
-    }, [nodes.length]); // Dependency on length to detect additions
-
-    const showRecommendation = (sourceNode: Node<DeviceData>, rule: { messageKey: string, options: DeviceType[] }) => {
+    const showRecommendation = (sourceNode: Node<DeviceData>, rule: Rule) => {
         const key = `guide-${Date.now()}`;
         
         const handleAdd = (targetType: DeviceType) => {
@@ -196,8 +184,32 @@ export default function GuideSystem() {
             className: '!bg-slate-900/95 !border !border-slate-700 !backdrop-blur-md !shadow-2xl',
             style: { width: 380 },
             closeIcon: <X className="text-slate-500 hover:text-slate-300" size={16} />,
-        } as any); // Cast to any to suppress linter error about missing 'title' property which seems to be a type mismatch
+        });
     };
+
+    // Keep the callback fresh; writing a ref belongs in an effect, not render.
+    useEffect(() => {
+        showRef.current = showRecommendation;
+    });
+
+    useEffect(() => {
+        // Subscribe to the store instead of watching a count in state: this
+        // fires exactly when a node is added, without a render-phase update.
+        let previousCount = useStore.getState().nodes.length;
+        const unsubscribe = useStore.subscribe((state) => {
+            const count = state.nodes.length;
+            if (count > previousCount && count > 0) {
+                const added = state.nodes[count - 1];
+                const rule = RECOMMENDATIONS[added.data.type as DeviceType];
+                if (rule) {
+                    // Small delay so the node appears before the prompt.
+                    setTimeout(() => showRef.current(added, rule), 600);
+                }
+            }
+            previousCount = count;
+        });
+        return unsubscribe;
+    }, []);
 
     return <>{contextHolder}</>;
 }

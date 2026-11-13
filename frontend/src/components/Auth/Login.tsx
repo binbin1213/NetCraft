@@ -2,42 +2,52 @@ import { ConfigProvider, theme, App as AntdApp } from 'antd';
 import { useState } from 'react';
 import { Form, Input, Button, Card, Tabs } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import useStore from '../../store/useStore';
 
+interface LoginValues {
+    username: string;
+    password: string;
+    email?: string;
+}
+
 export default function Login({ isModal = false, onSuccess }: { isModal?: boolean; onSuccess?: () => void }) {
     const [loading, setLoading] = useState(false);
+    const { t } = useTranslation();
     const { setToken, setUser } = useStore();
     const [activeTab, setActiveTab] = useState('login');
     const { message } = AntdApp.useApp();
 
-    const onFinishLogin = async (values: any) => {
+    const onFinishLogin = async (values: LoginValues) => {
         setLoading(true);
         try {
             const { access_token } = await api.login(values.username, values.password);
             setToken(access_token);
-            message.success('登录成功');
+            message.success(t('auth.loginSuccess'));
             
             // Fetch user info
             const user = await api.getCurrentUser();
             setUser(user);
             onSuccess?.();
-        } catch (error: any) {
-            message.error(error.message || '登录失败');
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : t('auth.loginFailed');
+            message.error(msg);
         } finally {
             setLoading(false);
         }
     };
 
-    const onFinishRegister = async (values: any) => {
+    const onFinishRegister = async (values: LoginValues) => {
         setLoading(true);
         try {
             await api.register(values.username, values.password, values.email);
-            message.success('注册成功，请登录');
+            message.success(t('auth.registerSuccess'));
             setActiveTab('login');
             // onSuccess is not called here because user needs to login after register
-        } catch (error: any) {
-            message.error(error.message || '注册失败');
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : t('auth.registerFailed');
+            message.error(msg);
         } finally {
             setLoading(false);
         }
@@ -48,7 +58,7 @@ export default function Login({ isModal = false, onSuccess }: { isModal?: boolea
             {!isModal && (
                 <div className="text-center mb-6">
                     <h1 className="text-2xl font-bold text-slate-100">NetCraft</h1>
-                    <p className="text-slate-400">网络架构设计平台</p>
+                    <p className="text-slate-400">{t('auth.tagline')}</p>
                 </div>
             )}
             
@@ -59,7 +69,7 @@ export default function Login({ isModal = false, onSuccess }: { isModal?: boolea
                 items={[
                     {
                         key: 'login',
-                        label: '登录',
+                        label: t('auth.login'),
                         children: (
                             <Form
                                 name="login"
@@ -69,27 +79,27 @@ export default function Login({ isModal = false, onSuccess }: { isModal?: boolea
                             >
                                 <Form.Item
                                     name="username"
-                                    rules={[{ required: true, message: '请输入用户名' }]}
+                                    rules={[{ required: true, message: t('auth.usernameRequired') }]}
                                 >
                                     <Input 
                                         prefix={<UserOutlined className="text-slate-400" />} 
-                                        placeholder="用户名" 
+                                        placeholder={t('auth.username')} 
                                         className="!bg-slate-800 !border-slate-700 !text-slate-100 placeholder:!text-slate-500 hover:!border-cyan-500 focus:!border-cyan-500"
                                     />
                                 </Form.Item>
                                 <Form.Item
                                     name="password"
-                                    rules={[{ required: true, message: '请输入密码' }]}
+                                    rules={[{ required: true, message: t('auth.passwordRequired') }]}
                                 >
                                     <Input.Password 
                                         prefix={<LockOutlined className="text-slate-400" />} 
-                                        placeholder="密码"
+                                        placeholder={t('auth.password')}
                                         className="!bg-slate-800 !border-slate-700 !text-slate-100 placeholder:!text-slate-500 hover:!border-cyan-500 focus:!border-cyan-500"
                                     />
                                 </Form.Item>
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit" block loading={loading} className="bg-cyan-600 hover:bg-cyan-500 border-none h-10">
-                                        登录
+                                        {t('auth.login')}
                                     </Button>
                                 </Form.Item>
                             </Form>
@@ -97,7 +107,7 @@ export default function Login({ isModal = false, onSuccess }: { isModal?: boolea
                     },
                     {
                         key: 'register',
-                        label: '注册',
+                        label: t('auth.register'),
                         children: (
                             <Form
                                 name="register"
@@ -107,37 +117,37 @@ export default function Login({ isModal = false, onSuccess }: { isModal?: boolea
                             >
                                 <Form.Item
                                     name="username"
-                                    rules={[{ required: true, message: '请输入用户名' }]}
+                                    rules={[{ required: true, message: t('auth.usernameRequired') }]}
                                 >
                                     <Input 
                                         prefix={<UserOutlined className="text-slate-400" />} 
-                                        placeholder="用户名"
+                                        placeholder={t('auth.username')}
                                         className="!bg-slate-800 !border-slate-700 !text-slate-100 placeholder:!text-slate-500 hover:!border-cyan-500 focus:!border-cyan-500"
                                     />
                                 </Form.Item>
                                 <Form.Item
                                     name="email"
-                                    rules={[{ type: 'email', message: '请输入有效的邮箱' }]}
+                                    rules={[{ type: 'email', message: t('auth.emailInvalid') }]}
                                 >
                                     <Input 
                                         prefix={<MailOutlined className="text-slate-400" />} 
-                                        placeholder="邮箱 (可选)"
+                                        placeholder={t('auth.email')}
                                         className="!bg-slate-800 !border-slate-700 !text-slate-100 placeholder:!text-slate-500 hover:!border-cyan-500 focus:!border-cyan-500"
                                     />
                                 </Form.Item>
                                 <Form.Item
                                     name="password"
-                                    rules={[{ required: true, message: '请输入密码' }]}
+                                    rules={[{ required: true, message: t('auth.passwordRequired') }]}
                                 >
                                     <Input.Password 
                                         prefix={<LockOutlined className="text-slate-400" />} 
-                                        placeholder="密码"
+                                        placeholder={t('auth.password')}
                                         className="!bg-slate-800 !border-slate-700 !text-slate-100 placeholder:!text-slate-500 hover:!border-cyan-500 focus:!border-cyan-500"
                                     />
                                 </Form.Item>
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit" block loading={loading} className="bg-cyan-600 hover:bg-cyan-500 border-none h-10">
-                                        注册
+                                        {t('auth.register')}
                                     </Button>
                                 </Form.Item>
                             </Form>

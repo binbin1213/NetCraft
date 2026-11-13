@@ -1,14 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Settings2, Activity, Network, Plus, Trash2, Cpu, Database, Box } from 'lucide-react';
 import { Input, Select, Button } from 'antd';
-import useStore from '../../store/useStore';
+import useStore, { type RFStateShape } from '../../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { type Node, type Edge } from 'reactflow';
 import { type DeviceData, type EdgeData } from '../../types/nodes';
 
 const { Option } = Select;
 
-const selector = (state: any) => ({
+const selector = (state: RFStateShape) => ({
   nodes: state.nodes,
   edges: state.edges,
   updateNodeData: state.updateNodeData,
@@ -20,16 +20,16 @@ export default function PropertiesPanel() {
   const { nodes, edges, updateNodeData, updateEdgeData } = useStore(useShallow(selector));
   
   // Find the selected node or edge
-  const selectedNode = nodes.find((node: any) => node.selected) as Node<DeviceData> | undefined;
-  const selectedEdge = edges.find((edge: any) => edge.selected) as Edge<EdgeData> | undefined;
+  const selectedNode = nodes.find((node) => node.selected) as Node<DeviceData> | undefined;
+  const selectedEdge = edges.find((edge) => edge.selected) as Edge<EdgeData> | undefined;
 
-  const handleNodeChange = (key: keyof DeviceData, value: any) => {
+  const handleNodeChange = (key: keyof DeviceData, value: DeviceData[keyof DeviceData]) => {
     if (selectedNode) {
       updateNodeData(selectedNode.id, { [key]: value });
     }
   };
 
-  const handleEdgeChange = (key: keyof EdgeData, value: any) => {
+  const handleEdgeChange = (key: keyof EdgeData, value: EdgeData[keyof EdgeData]) => {
       if (selectedEdge) {
           updateEdgeData(selectedEdge.id, { [key]: value });
       }

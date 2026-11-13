@@ -9,3 +9,30 @@ body {
   overflow: hidden; /* Prevent scrollbars for the canvas app */
   background-color: #0f172a; /* bg-slate-900 */
 }
+
+/* React Flow 的缩放/适配按钮默认是浅色主题（白底 + 深色图标），
+   在深色界面上几乎不可见。这里显式覆盖为深色主题。 */
+.react-flow__controls-button {
+  background: #1e293b; /* slate-800 */
+  border-bottom: 1px solid #334155; /* slate-700 */
+}
+
+.react-flow__controls-button:hover {
+  background: #334155;
+}
+
+.react-flow__controls-button svg {
+  fill: #cbd5e1; /* slate-300 */
+}
+
+.react-flow__controls-button:disabled svg {
+  fill: #475569;
+}
+
+.react-flow__attribution {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.react-flow__attribution a {
+  color: #64748b;
+}

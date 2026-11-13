@@ -70,7 +70,7 @@ function App() {
                 footer={null}
                 width={400}
                 centered
-                destroyOnClose
+                destroyOnHidden
                 styles={{ mask: { backdropFilter: 'blur(4px)' } }}
             >
                 <Login isModal onSuccess={() => setLoginModalOpen(false)} />

@@ -2,13 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Loader2, Minus, X, Settings } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Input, Button, message, Tooltip, Modal, Form, Select } from 'antd';
+import { Input, Button, Tooltip, Modal, Form, Select, App as AntdApp } from 'antd';
+import { type DeviceData, type EdgeData } from '../../types/nodes';
 import clsx from 'clsx';
 import Draggable from 'react-draggable';
 
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import useStore from '../../store/useStore';
 import { API_BASE_URL } from '../../config';
+import { getLayoutedElements } from '../../utils/autoLayout';
+import { edgeExists } from '../../utils/graph';
 
 interface Message {
     role: 'user' | 'assistant' | 'system';
@@ -22,6 +26,29 @@ interface LLMConfig {
     base_url?: string;
 }
 
+/**
+ * Shape of the JSON action block the model is instructed to emit.
+ * Fields are optional because the payload comes from an LLM, not from us;
+ * everything is normalised before it reaches the store.
+ */
+interface TopologyAction {
+    action: 'update_topology' | 'auto_layout';
+    nodes?: Array<{
+        id: string;
+        position?: { x?: number; y?: number };
+        data?: Partial<DeviceData>;
+        [key: string]: unknown;
+    }>;
+    edges?: Array<{
+        id?: string;
+        source: string;
+        target: string;
+        data?: Partial<EdgeData>;
+        [key: string]: unknown;
+    }>;
+    direction?: string;
+}
+
 const DEFAULT_CONFIG: LLMConfig = {
     provider: 'dashscope',
     model: 'qwen-turbo',
@@ -30,7 +57,9 @@ const DEFAULT_CONFIG: LLMConfig = {
 };
 
 export default function AiAssistant() {
-    const { nodes, edges } = useStore(useShallow((state: any) => ({ 
+    const { message } = AntdApp.useApp();
+    const { t } = useTranslation();
+    const { nodes, edges } = useStore(useShallow((state) => ({ 
         nodes: state.nodes,
         edges: state.edges 
     })));
@@ -50,24 +79,23 @@ export default function AiAssistant() {
                 console.error('Failed to parse saved config', e);
             }
         }
-    }, []);
+        // form is a stable Ant Design instance; including it avoids a stale
+        // closure if that ever changes.
+    }, [form]);
 
-    const handleSaveSettings = (values: any) => {
+    const handleSaveSettings = (values: Partial<LLMConfig>) => {
         const newConfig = { ...config, ...values };
         setConfig(newConfig);
         localStorage.setItem('llm_config', JSON.stringify(newConfig));
         setIsSettingsOpen(false);
-        message.success('设置已保存');
+        message.success(t('ai.settingsSaved'));
     };
 
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showTooltip, setShowTooltip] = useState(true);
     const [messages, setMessages] = useState<Message[]>([
-        { 
-            role: 'assistant', 
-            content: '你好！我是 NetCraft 网络架构专家。我可以帮你设计网络拓扑、配置 OpenWRT、优化 OpenClash 代理以及加强 DNS 安全。请告诉我你的需求。' 
-        }
+        { role: 'assistant', content: t('ai.greeting') }
     ]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const dragRef = useRef<HTMLDivElement>(null);
@@ -111,6 +139,12 @@ export default function AiAssistant() {
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
 
+        const token = useStore.getState().token;
+        if (!token) {
+            message.warning(t('ai.loginRequired'));
+            return;
+        }
+
         const userMsg: Message = { role: 'user', content: input };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
@@ -134,7 +168,10 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
 
             const response = await fetch(`${API_BASE_URL}/api/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
                 body: JSON.stringify({ 
                     messages: history,
                     config: {
@@ -151,7 +188,7 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let assistantMsg: Message = { role: 'assistant', content: '' };
+            const assistantMsg: Message = { role: 'assistant', content: '' };
             let fullResponse = '';
             
             setMessages(prev => [...prev, assistantMsg]);
@@ -175,19 +212,35 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
             const jsonMatch = fullResponse.match(/```json\s*(\{\s*"action":[\s\S]*?\})\s*```/);
             if (jsonMatch) {
                 try {
-                    const actionData = JSON.parse(jsonMatch[1]);
+                    const actionData = JSON.parse(jsonMatch[1]) as TopologyAction;
                     if (actionData.action === 'update_topology') {
                         if (actionData.nodes) {
                             const currentNodes = useStore.getState().nodes;
-                            const newNodesMap = new Map(actionData.nodes.map((n: any) => [n.id, n]));
+                            const newNodesMap = new Map(actionData.nodes.map((n) => [n.id, n]));
                             
                             const updatedNodes = currentNodes.map(node => 
                                 newNodesMap.has(node.id) ? { ...node, ...(newNodesMap.get(node.id) as object) } : node
                             );
                             
-                            actionData.nodes.forEach((n: any) => {
+                            actionData.nodes.forEach((n) => {
                                 if (!currentNodes.find(cn => cn.id === n.id)) {
-                                    updatedNodes.push(n);
+                                    // Model-supplied nodes may omit position or
+                                    // data; fill in safe defaults so React Flow
+                                    // can render them.
+                                    updatedNodes.push({
+                                        id: n.id,
+                                        type: 'deviceNode',
+                                        position: {
+                                            x: n.position?.x ?? 0,
+                                            y: n.position?.y ?? 0,
+                                        },
+                                        data: {
+                                            name: n.data?.name ?? n.id,
+                                            type: n.data?.type ?? 'pc',
+                                            ip: n.data?.ip ?? '',
+                                            services: n.data?.services ?? [],
+                                        },
+                                    });
                                 }
                             });
                             
@@ -195,9 +248,30 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                         }
                         if (actionData.edges) {
                             const currentEdges = useStore.getState().edges;
-                            useStore.getState().setEdges([...currentEdges, ...actionData.edges]);
+                            // Skip edges that already exist (manual connect uses the
+                            // same bidirectional rule), otherwise the canvas would
+                            // end up with visually overlapping duplicate links.
+                            const newEdges = actionData.edges
+                                .filter((e) => !edgeExists(currentEdges, e.source, e.target))
+                                .map((e) => ({
+                                    id: e.id ?? `ai_edge_${e.source}_${e.target}`,
+                                    source: e.source,
+                                    target: e.target,
+                                    type: 'smartEdge',
+                                    data: { type: e.data?.type ?? 'eth_1g', animated: true },
+                                }));
+                            useStore.getState().setEdges([...currentEdges, ...newEdges]);
                         }
-                        message.success('Topology updated by AI');
+                        message.success(t('ai.topologyUpdated'));
+                    } else if (actionData.action === 'auto_layout') {
+                        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+                            useStore.getState().nodes,
+                            useStore.getState().edges,
+                            actionData.direction || 'TB'
+                        );
+                        useStore.getState().setNodes(layoutedNodes);
+                        useStore.getState().setEdges(layoutedEdges);
+                        message.success(t('ai.layoutApplied'));
                     }
                 } catch (e) {
                     console.error('Failed to parse AI action:', e);
@@ -206,8 +280,8 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
 
         } catch (error) {
             console.error(error);
-            message.error('AI 服务错误：请检查后端或 API Key');
-            setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ 错误：无法连接到 AI 服务。请确保后端正在运行且已配置 API Key。' }]);
+            message.error(t('ai.serviceError'));
+            setMessages(prev => [...prev, { role: 'assistant', content: t('ai.connectFailed') }]);
         } finally {
             setIsLoading(false);
         }
@@ -244,7 +318,7 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                 >
                     {showTooltip && (
                         <div className="absolute -top-12 bg-white text-slate-900 px-4 py-2 rounded-xl shadow-2xl text-sm font-bold animate-bounce whitespace-nowrap select-none">
-                            嗨，我在这！👋
+                            {t('ai.hint')}
                             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45"></div>
                         </div>
                     )}
@@ -276,7 +350,7 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                                     <Bot className="text-white w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-100 text-sm">NetCraft AI Expert</h3>
+                                    <h3 className="font-bold text-slate-100 text-sm">{t('ai.title')}</h3>
                                     <p className="text-[10px] text-cyan-400 flex items-center gap-1">
                                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"/>
                                         Online
@@ -352,7 +426,7 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                                     </div>
                                     <div className="bg-[#1e293b] border border-slate-800 rounded-lg p-3 flex items-center gap-2">
                                         <Loader2 className="w-4 h-4 animate-spin text-cyan-500" />
-                                        <span className="text-xs text-slate-500">Thinking...</span>
+                                        <span className="text-xs text-slate-500">{t('ai.thinking')}</span>
                                     </div>
                                 </div>
                             )}
@@ -371,7 +445,7 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                                             handleSend();
                                         }
                                     }}
-                                    placeholder="询问关于 OpenWRT、OpenClash 或网络设计的问题..."
+                                    placeholder={t('ai.placeholder')}
                                     autoSize={false}
                                     className="!h-full !bg-slate-800 !border-slate-700 !text-slate-200 placeholder:!text-slate-500 placeholder:!text-sm focus:!border-cyan-500 hover:!border-slate-600 custom-scrollbar !rounded-xl !text-base !py-2.5 !px-4 !resize-none"
                                 />
@@ -389,7 +463,7 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                                 />
                             </div>
                             <div className="mt-3 text-center">
-                                <span className="text-[10px] text-slate-600">由 Qwen Turbo 驱动 • AI 回复可能存在误差</span>
+                                <span className="text-[10px] text-slate-600">{t('ai.footer')}</span>
                             </div>
                         </div>
                     </div>
@@ -397,12 +471,12 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
             )}
             {/* Settings Modal */}
             <Modal
-                title="AI 配置"
+                title={t('ai.settingsTitle')}
                 open={isSettingsOpen}
                 onOk={form.submit}
                 onCancel={() => setIsSettingsOpen(false)}
-                okText="保存"
-                cancelText="取消"
+                okText={t('common.save')}
+                cancelText={t('common.cancel')}
                 width={500}
             >
                 <Form
@@ -413,7 +487,7 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
                 >
                     <Form.Item
                         name="provider"
-                        label="服务提供商"
+                        label={t('ai.provider')}
                         rules={[{ required: true }]}
                     >
                         <Select>
@@ -428,26 +502,26 @@ ${JSON.stringify({ nodes, edges }, null, 2)}
 
                     <Form.Item
                         name="model"
-                        label="模型名称"
+                        label={t('ai.model')}
                         rules={[{ required: true }]}
-                        help="例如：qwen-turbo, gpt-4o, deepseek-chat"
+                        help={t('ai.modelHelp')}
                     >
                         <Input placeholder="qwen-turbo" />
                     </Form.Item>
 
                     <Form.Item
                         name="api_key"
-                        label="API 密钥"
+                        label={t('ai.apiKey')}
                         rules={[{ required: false }]}
-                        help="留空则使用后端环境变量 (如果可用)"
+                        help={t('ai.apiKeyHelp')}
                     >
                         <Input.Password placeholder="sk-..." />
                     </Form.Item>
 
                     <Form.Item
                         name="base_url"
-                        label="代理地址 (Base URL - 可选)"
-                        help="DeepSeek/Moonshot 等兼容接口必填 (例如 https://api.deepseek.com)"
+                        label={t('ai.baseUrl')}
+                        help={t('ai.baseUrlHelp')}
                     >
                         <Input placeholder="https://api.openai.com/v1" />
                     </Form.Item>

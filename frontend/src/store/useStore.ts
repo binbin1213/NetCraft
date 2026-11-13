@@ -15,30 +15,13 @@ import {
   applyEdgeChanges,
 } from 'reactflow';
 import { type DeviceData, type EdgeData } from '../types/nodes';
-
-// Simple UUID generator
-const uuidv4 = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-};
-
+import { edgeExists } from '../utils/graph';
 
 export interface User {
     id: number;
     username: string;
     email?: string;
     created_at: string;
-}
-
-export interface Project {
-    id: string;
-    name: string;
-    nodes: Node<DeviceData>[];
-    edges: Edge<EdgeData>[];
-    updatedAt: number;
-    thumbnail?: string; // Optional for future
 }
 
 interface AuthState {
@@ -54,25 +37,25 @@ interface AuthState {
 interface RFState extends AuthState {
   nodes: Node<DeviceData>[];
   edges: Edge<EdgeData>[];
-  
-  // Project Management
-  projects: Project[];
-  currentProjectId: string | null;
-  createProject: (name: string) => void;
-  loadProject: (id: string) => void;
-  saveProject: () => void; // Sync current state to project list
-  deleteProject: (id: string) => void;
-  renameProject: (id: string, name: string) => void;
+
+  // The cloud project currently open on the canvas.
+  // Server is the single source of truth; there is no local project list.
+  currentProjectId: number | null;
+  setCurrentProjectId: (id: number | null) => void;
+  // True once the canvas differs from the last saved snapshot.
+  isDirty: boolean;
+  markClean: () => void;
 
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   addNode: (node: Node<DeviceData>) => void;
-  addEdge: (edge: Edge<EdgeData>) => void; // Added manual addEdge action
+  addEdge: (edge: Edge<EdgeData>) => void;
   updateNodeData: (id: string, data: Partial<DeviceData>) => void;
   updateEdgeData: (id: string, data: Partial<EdgeData>) => void;
-  setNodes: (nodes: Node<DeviceData>[]) => void; // Added for templates/layout
-  setEdges: (edges: Edge<EdgeData>[]) => void;   // Added for templates/layout
+  setNodes: (nodes: Node<DeviceData>[]) => void;
+  setEdges: (edges: Edge<EdgeData>[]) => void;
+  resetCanvas: () => void;
 }
 
 const useStore = create<RFState>()(
@@ -86,78 +69,19 @@ const useStore = create<RFState>()(
         setToken: (token) => set({ token }),
         setUser: (user) => set({ user }),
         setLoginModalOpen: (open) => set({ loginModalOpen: open }),
-        logout: () => set({ token: null, user: null }),
+        logout: () => set({
+            token: null,
+            user: null,
+            currentProjectId: null,
+            nodes: [],
+            edges: [],
+        }),
 
-        // Project Management
-        projects: [],
+        // Cloud project state
         currentProjectId: null,
-        createProject: (name: string) => {
-            const newProject: Project = {
-                id: uuidv4(),
-                name,
-                nodes: [],
-                edges: [],
-                updatedAt: Date.now()
-            };
-            // If we have current nodes/edges and no project is loaded, maybe we should prompt?
-            // For now, create new empty project and switch to it
-            set((state) => ({
-                projects: [...state.projects, newProject],
-                currentProjectId: newProject.id,
-                nodes: [],
-                edges: []
-            }));
-        },
-        loadProject: (id: string) => {
-            const state = get();
-            // Auto-save current if in a project
-            if (state.currentProjectId) {
-                state.saveProject();
-            }
-
-            const project = state.projects.find(p => p.id === id);
-            if (project) {
-                set({
-                    currentProjectId: id,
-                    nodes: project.nodes,
-                    edges: project.edges
-                });
-            }
-        },
-        saveProject: () => {
-            const state = get();
-            if (state.currentProjectId) {
-                set({
-                    projects: state.projects.map(p => 
-                        p.id === state.currentProjectId 
-                        ? { ...p, nodes: state.nodes, edges: state.edges, updatedAt: Date.now() }
-                        : p
-                    )
-                });
-            }
-        },
-        deleteProject: (id: string) => {
-            set((state) => {
-                const newProjects = state.projects.filter(p => p.id !== id);
-                // If deleting current project, clear canvas or switch to another?
-                if (state.currentProjectId === id) {
-                    return {
-                        projects: newProjects,
-                        currentProjectId: null,
-                        nodes: [],
-                        edges: []
-                    };
-                }
-                return { projects: newProjects };
-            });
-        },
-        renameProject: (id: string, name: string) => {
-            set((state) => ({
-                projects: state.projects.map(p => 
-                    p.id === id ? { ...p, name } : p
-                )
-            }));
-        },
+        setCurrentProjectId: (id) => set({ currentProjectId: id }),
+        isDirty: false,
+        markClean: () => set({ isDirty: false }),
 
         // Graph State
         nodes: [],
@@ -165,24 +89,20 @@ const useStore = create<RFState>()(
         onNodesChange: (changes: NodeChange[]) => {
           set({
             nodes: applyNodeChanges(changes, get().nodes),
+            isDirty: true,
           });
         },
         onEdgesChange: (changes: EdgeChange[]) => {
           set({
             edges: applyEdgeChanges(changes, get().edges),
+            isDirty: true,
           });
         },
         onConnect: (connection: Connection) => {
           const edges = get().edges;
           // Prevent duplicate connections between same nodes (bidirectional check)
           // A->B is same as B->A for physical cables
-          const exists = edges.some(
-            (e) => 
-              (e.source === connection.source && e.target === connection.target) ||
-              (e.source === connection.target && e.target === connection.source)
-          );
-
-          if (exists) {
+          if (edgeExists(edges, connection.source, connection.target)) {
               return; // Do nothing if connection already exists
           }
 
@@ -190,16 +110,23 @@ const useStore = create<RFState>()(
           const newEdge = { ...connection, type: 'smartEdge', data: { type: 'eth_1g' } };
           set({
             edges: addEdge(newEdge, edges),
+            isDirty: true,
           });
         },
         addNode: (node: Node<DeviceData>) => {
           set({
             nodes: [...get().nodes, node],
+            isDirty: true,
           });
         },
         addEdge: (edge: Edge<EdgeData>) => {
+          const edges = get().edges;
+          if (edgeExists(edges, edge.source, edge.target)) {
+            return;
+          }
           set({
-            edges: addEdge(edge, get().edges),
+            edges: addEdge(edge, edges),
+            isDirty: true,
           });
         },
         updateNodeData: (id: string, data: Partial<DeviceData>) => {
@@ -213,6 +140,7 @@ const useStore = create<RFState>()(
               }
               return node;
             }),
+            isDirty: true,
           });
         },
         updateEdgeData: (id: string, data: Partial<EdgeData>) => {
@@ -225,35 +153,38 @@ const useStore = create<RFState>()(
                 }
               }
               return edge;
-            })
+            }),
+            isDirty: true,
           })
         },
-        setNodes: (nodes) => set({ nodes }),
-        setEdges: (edges) => set({ edges }),
+        setNodes: (nodes) => set({ nodes, isDirty: true }),
+        setEdges: (edges) => set({ edges, isDirty: true }),
+        resetCanvas: () => set({ nodes: [], edges: [], currentProjectId: null, isDirty: false }),
       }),
       {
         name: 'netcraft-storage',
         storage: createJSONStorage(() => localStorage),
-        // We persist auth state too
-        partialize: (state) => ({ 
-            nodes: state.nodes, 
+        // Persist auth session and the live canvas (unsaved work survives reload),
+        // but never the project list: that lives on the server.
+        partialize: (state) => ({
+            nodes: state.nodes,
             edges: state.edges,
             token: state.token,
             user: state.user,
-            projects: state.projects,
-            currentProjectId: state.currentProjectId
+            currentProjectId: state.currentProjectId,
+            isDirty: state.isDirty,
         }),
-        version: 1,
-        migrate: (persistedState: any, _version) => {
+        version: 2,
+        migrate: (persistedState: unknown) => {
             // Always sanitize state to prevent crashes and duplicates
-            const validNodes = Array.isArray(persistedState.nodes) ? persistedState.nodes : [];
-            const validEdges = Array.isArray(persistedState.edges) ? persistedState.edges : [];
-            const validProjects = Array.isArray(persistedState.projects) ? persistedState.projects : [];
+            const state = (persistedState ?? {}) as Partial<RFStateShape>;
+            const validNodes = Array.isArray(state.nodes) ? state.nodes : [];
+            const validEdges = Array.isArray(state.edges) ? state.edges : [];
 
             // Deduplicate edges based on source-target (bidirectional)
             const uniqueEdges = [];
             const edgeSignatures = new Set();
-            
+
             for (const edge of validEdges) {
                 // Create a sorted signature so A->B and B->A are treated as the same connection
                 const signature = [edge.source, edge.target].sort().join('-');
@@ -263,17 +194,29 @@ const useStore = create<RFState>()(
                 }
             }
 
+            // v1 kept a local uuid-keyed project list here. It had no link to the
+            // cloud API, so it is dropped on migration.
             return {
-                ...persistedState,
+                ...state,
                 nodes: validNodes,
                 edges: uniqueEdges,
-                projects: validProjects,
-                currentProjectId: persistedState.currentProjectId || null,
+                currentProjectId:
+                    typeof state.currentProjectId === 'number'
+                        ? state.currentProjectId
+                        : null,
+                isDirty: Boolean(state.isDirty),
             };
         },
       }
-    )
+    ),
+    {
+      // Cap the undo history so long editing sessions do not grow without bound.
+      limit: 50,
+    }
   )
 );
+
+/** Read-only shape of the store, handy for typing selectors. */
+export type RFStateShape = RFState;
 
 export default useStore;

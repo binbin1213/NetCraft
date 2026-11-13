@@ -1,15 +1,17 @@
 import dagre from 'dagre';
 import { type Node, type Edge, Position } from 'reactflow';
 
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
-
 const nodeWidth = 220; // w-52 = 13rem = 208px + padding
 const nodeHeight = 100;
 
 export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
   const isHorizontal = direction === 'LR';
-  
+
+  // Create the graph per call: reusing a module-level instance keeps stale
+  // nodes from previous layouts and skews later results.
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+
   // Set more compact layout settings
   dagreGraph.setGraph({ 
       rankdir: direction,

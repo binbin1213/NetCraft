@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { PanelLeft, Settings2, Layers, LayoutTemplate, AlertCircle, FolderOpen, Globe, Moon } from 'lucide-react';
+import { PanelLeft, Settings2, Layers, LayoutTemplate, AlertCircle, FolderOpen, Globe, Moon, Lightbulb } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Modal, ConfigProvider, theme, Divider } from 'antd';
 import { type DeviceType, type DeviceData } from '../../types/nodes';
 import { TEMPLATES, type Template } from '../../data/templates';
-import useStore from '../../store/useStore';
+import useStore, { type RFStateShape } from '../../store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import { type Node } from 'reactflow';
 import clsx from 'clsx';
@@ -16,12 +16,32 @@ interface DeviceItem {
   label: string;
 }
 
+// Stagger successive placements so nodes added in a row do not stack exactly.
+// Kept at module scope: the react-hooks purity rule treats anything defined
+// inside the component body as render-scope, even in event handlers.
+let placementOffset = 0;
+
+const buildPlacedNode = (
+  type: DeviceType,
+  name: string,
+  ip: string
+): Node<DeviceData> => {
+  placementOffset = (placementOffset + 1) % 5;
+  const offset = placementOffset * 24;
+  return {
+    id: `sidebar_node_${Date.now()}_${placementOffset}`,
+    type: 'deviceNode',
+    position: { x: 250 + offset, y: 250 + offset },
+    data: { name, type, ip, status: 'online', services: [] },
+  };
+};
+
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<'devices' | 'templates'>('devices');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProjectManagerOpen, setIsProjectManagerOpen] = useState(false);
-  const { nodes, setNodes, setEdges, addNode } = useStore(useShallow((state: any) => ({ 
+  const { nodes, setNodes, setEdges, addNode } = useStore(useShallow((state: RFStateShape) => ({ 
       nodes: state.nodes,
       setNodes: state.setNodes, 
       setEdges: state.setEdges,
@@ -34,20 +54,9 @@ export default function Sidebar() {
   };
 
   const handleDoubleClick = (type: DeviceType) => {
-      const newNode: Node<DeviceData> = {
-          id: `sidebar_node_${Date.now()}`,
-          type: 'deviceNode',
-          // Add with a slight random offset to avoid perfect stacking if user adds multiple quickly
-          position: { x: 250 + Math.random() * 50, y: 250 + Math.random() * 50 },
-          data: {
-              name: t(`sidebar.${type}`), // Use localized name
-              type: type,
-              ip: generateNextIP(nodes),
-              status: 'online',
-              services: []
-          }
-      };
-      addNode(newNode);
+      addNode(
+          buildPlacedNode(type, t(`sidebar.${type}`), generateNextIP(nodes))
+      );
   };
 
   const handleLoadTemplate = (template: Template) => {
@@ -55,13 +64,13 @@ export default function Sidebar() {
           title: t(template.nameKey),
           icon: <AlertCircle className="text-cyan-500" />,
           content: t('templates.loadConfirm'),
-          okText: 'Load',
-          cancelText: 'Cancel',
+          okText: t('templates.load'),
+          cancelText: t('common.cancel'),
           className: 'netcraft-modal',
           okButtonProps: { className: 'bg-cyan-600 hover:!bg-cyan-500' },
           onOk() {
               // Deep clone to avoid reference issues
-              const nodes = JSON.parse(JSON.stringify(template.nodes)).map((node: any) => ({
+              const nodes = JSON.parse(JSON.stringify(template.nodes)).map((node: Node<DeviceData>) => ({
                   ...node,
                   data: {
                       ...node.data,
@@ -190,6 +199,12 @@ export default function Sidebar() {
                         <p className="text-xs text-slate-400 leading-relaxed">
                             {t(template.descriptionKey)}
                         </p>
+                        {template.noteKey && (
+                            <p className="mt-1.5 flex items-start gap-1 text-[10px] leading-snug text-slate-500">
+                                <Lightbulb size={10} className="mt-0.5 flex-shrink-0 text-cyan-600" />
+                                <span>{t(template.noteKey)}</span>
+                            </p>
+                        )}
                     </div>
                 ))}
             </div>

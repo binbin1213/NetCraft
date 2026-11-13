@@ -149,13 +149,15 @@ export default function DeviceNode({ data, selected }: NodeProps<DeviceData>) {
         title={null} 
         trigger="hover"
         overlayClassName="[&_.ant-popover-arrow]:!hidden"
-        overlayInnerStyle={{ 
-            backgroundColor: '#0f172a', // slate-900
-            borderColor: '#334155', // slate-700
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            color: '#e2e8f0', // slate-200
-            padding: '12px'
+        styles={{
+            body: {
+                backgroundColor: '#0f172a', // slate-900
+                borderColor: '#334155', // slate-700
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                color: '#e2e8f0', // slate-200
+                padding: '12px',
+            },
         }}
         placement="right"
         mouseEnterDelay={0.5} // Delay to prevent flickering
